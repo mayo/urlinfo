@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"urlinfo"
 )
 
 var testValidURLSet = [...]string{
@@ -24,6 +25,12 @@ var testInvalidURLSet = [...]string{
 	"/",
 	" foo",
 	" /file",
+}
+
+var badURLs = map[string]bool{
+	"evilfoo.com":  true,
+	"malware.com":  true,
+	"foo.com/evil": true,
 }
 
 var baseURL = "/urlinfo/1/"
@@ -72,10 +79,11 @@ func TestParseURLInvalid(t *testing.T) {
 }
 
 func TestHandler(t *testing.T) {
-	req, _ := http.NewRequest("GET", baseURL+"foo.com", nil)
+	req, _ := http.NewRequest("GET", baseURL+"evilfoo.com", nil)
 	res := httptest.NewRecorder()
 
-	handler(res, req)
+	urlDB := urlinfo.URLDB{DB: badURLs}
+	handler(&urlDB)(res, req)
 
 	if res.Code != http.StatusOK {
 		t.Fatal()
