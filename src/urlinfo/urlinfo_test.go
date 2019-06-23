@@ -1,7 +1,8 @@
-package urlinfo
+package urlinfo_test
 
 import (
 	"testing"
+	"urlinfo"
 )
 
 var badURLs = map[string]bool{
@@ -11,7 +12,7 @@ var badURLs = map[string]bool{
 }
 
 func TestLookupMiss(t *testing.T) {
-	urlDB := URLDB{DB: badURLs}
+	urlDB := urlinfo.MapURLDB{DB: badURLs}
 
 	if ok := urlDB.Lookup("foo.com"); ok {
 		t.Fatal()
@@ -19,7 +20,7 @@ func TestLookupMiss(t *testing.T) {
 }
 
 func TestLookupHit(t *testing.T) {
-	urlDB := URLDB{DB: badURLs}
+	urlDB := urlinfo.MapURLDB{DB: badURLs}
 
 	if ok := urlDB.Lookup("malware.com"); !ok {
 		t.Fatal()

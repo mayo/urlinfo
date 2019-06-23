@@ -4,44 +4,54 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"urlinfo"
+
+	"github.com/PuerkitoBio/purell"
 )
 
-// parseURL parses incoming URL for an URL that needs to be checked.
-func parseURL(url string) (string, error) {
-	parts := strings.SplitN(url, "/", 4)
-	if len(parts) < 4 {
-		return "", errors.New("invalid url request")
+const (
+	//URLPrefix for the service
+	URLPrefix    = "/urlinfo/1/"
+	urlPrefixLen = len(URLPrefix)
+)
+
+// parseCleanURL parses the request URI, parsing out the link that needs to be checked, and doing a light validation and normalization on it
+func parseCleanURL(requestURI string) (cleanURL string, err error) {
+	requestURI = requestURI[urlPrefixLen:]
+
+	if len(requestURI) == 0 || requestURI[0] == '/' {
+		err = errors.New("urlinfo: Invalid URL")
+		return
 	}
 
-	return parts[3], nil
+	parsedURL := "http://" + requestURI
+
+	// Normalize
+	cleanURL, err = purell.NormalizeURLString(parsedURL, purell.FlagsSafe|purell.FlagRemoveDotSegments|purell.FlagRemoveFragment|purell.FlagRemoveDuplicateSlashes|purell.FlagSortQuery|purell.FlagSortQuery|purell.FlagDecodeOctalHost|purell.FlagDecodeHexHost|purell.FlagRemoveUnnecessaryHostDots|purell.FlagRemoveEmptyPortSeparator)
+
+	if err != nil {
+		err = errors.New("urlinfo: Could not normalize URL")
+		return
+	}
+
+	return
 }
 
-func handler(udb *urlinfo.URLDB) http.HandlerFunc {
+func handler(udb urlinfo.URLDB) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Build the URL from requested URL. Using r.URL avoids having to strip fragments. Alternative would be to use r.RequestURI and cut off at first hash (#)
-		// Not using RawPath, it seems to be empty
-		checkURL := r.URL.Path
+		// Get the requested URL and normalize it
+		lookupURL, err := parseCleanURL(r.RequestURI)
 
-		if r.URL.RawQuery != "" {
-			checkURL += "?" + r.URL.RawQuery
-		}
-
-		// Parse the requested URL
-		urlNoScheme, err := parseURL(checkURL)
 		if err != nil {
 			badRequestError(w)
-			fmt.Printf("urlinfo: Couldn't parse requested URL: %s\n", r.URL)
-		}
-
-		if urlNoScheme == "" {
-			badRequestError(w)
-			fmt.Println("urlinfo: No URL specified")
+			fmt.Println("urlinfo: Couldn't parse URL:", lookupURL, err)
+			return
 		}
 
 		// Lookup and response
-		ok := udb.Lookup(urlNoScheme)
+		ok := udb.Lookup(lookupURL)
+
+		// Respond
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("{\"malware\": %t}", ok)))
 	})
@@ -62,8 +72,8 @@ var urlDB urlinfo.URLDB
 
 func main() {
 	urls := map[string]bool{"malware.com": true}
-	urlDB = urlinfo.URLDB{DB: urls}
+	urlDB = urlinfo.MapURLDB{DB: urls}
 
-	http.HandleFunc("/urlinfo/1/", handler(&urlDB))
+	http.HandleFunc(URLPrefix, handler(urlDB))
 	http.ListenAndServe(":8080", nil)
 }
