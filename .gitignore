@@ -13,5 +13,5 @@
 *.out
 
 .vscode
-bin/**
-pkg/**
+testdata/**
+build/**
