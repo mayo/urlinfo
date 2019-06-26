@@ -16,26 +16,26 @@ type URLDB interface {
 
 // StringMapURLDB is a map based URL database, storing the URL (key) as string.
 type StringMapURLDB struct {
-	DB map[string]bool
+	db map[string]bool
 }
 
 // NewStringMapURLDB creates a new instance of MapURLDB with an empty map
 func NewStringMapURLDB() StringMapURLDB {
 	mdb := StringMapURLDB{}
-	mdb.DB = make(map[string]bool)
+	mdb.db = make(map[string]bool)
 
 	return mdb
 }
 
 // Lookup given URL in data store and return true if the URL is present
 func (mdb StringMapURLDB) Lookup(url string) bool {
-	_, ok := mdb.DB[url]
+	_, ok := mdb.db[url]
 	return ok
 }
 
 // Add a new entry to the DB
 func (mdb StringMapURLDB) Add(url string) {
-	mdb.DB[url] = true
+	mdb.db[url] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://

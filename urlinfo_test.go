@@ -11,29 +11,75 @@ const (
 	chars        = "abcdefghijklmnopqrstuvwxyz1234567890:/.?=&%"
 	benchDBSize  = 1024
 	urlCharLimit = 2000
+
+	malwareFile    = "testdata/malware_mini.txt"
+	malwareFileHit = "http://evilfoo.com"
 )
 
-var malwareURLs = map[string]bool{
-	"evilfoo.com":  true,
-	"malware.com":  true,
-	"foo.com/evil": true,
+var malwareURLs = []string{
+	"evilfoo.com",
+	"malware.com",
+	"foo.com/evil",
 }
 
-func TestStringMapLookupMiss(t *testing.T) {
-	urlDB := urlinfo.StringMapURLDB{DB: malwareURLs}
-
-	if ok := urlDB.Lookup("foo.com"); ok {
-		t.Fatal()
+func loadURLs(urlDB urlinfo.URLDB, urls []string) {
+	for _, url := range urls {
+		urlDB.Add(url)
 	}
 }
 
-func TestStringMapLookupHit(t *testing.T) {
-	urlDB := urlinfo.StringMapURLDB{DB: malwareURLs}
+func testLookup(urlDB urlinfo.URLDB, hitURL string, t *testing.T) {
+	t.Run("miss", func(t *testing.T) {
+		if ok := urlDB.Lookup("miss"); ok {
+			t.Error()
+		}
+	})
 
-	if ok := urlDB.Lookup("malware.com"); !ok {
+	t.Run("hit", func(t *testing.T) {
+		if ok := urlDB.Lookup(hitURL); !ok {
+			t.Error()
+		}
+	})
+}
+
+// String Map tests
+func TestStringMapLookup(t *testing.T) {
+	urlDB := urlinfo.NewStringMapURLDB()
+	loadURLs(urlDB, malwareURLs)
+	testLookup(urlDB, malwareURLs[0], t)
+}
+
+func TestStringMapLoad(t *testing.T) {
+	urlDB := urlinfo.NewStringMapURLDB()
+	err := urlDB.Load(malwareFile)
+
+	if err != nil {
 		t.Fatal()
 	}
+
+	testLookup(urlDB, malwareFileHit, t)
 }
+
+// ByteMap tests
+
+func TestByteMapLookup(t *testing.T) {
+	urlDB := urlinfo.NewByteMapURLDB()
+	loadURLs(urlDB, malwareURLs)
+	testLookup(urlDB, malwareURLs[0], t)
+}
+
+func TestByteMapLoad(t *testing.T) {
+	urlDB := urlinfo.NewByteMapURLDB()
+	err := urlDB.Load(malwareFile)
+
+	if err != nil {
+		t.Fatal()
+	}
+
+	testLookup(urlDB, malwareFileHit, t)
+}
+
+// Benchmarks
 
 func benchmarkLookup(db urlinfo.URLDB, keys []string, b *testing.B) {
 	b.ResetTimer()

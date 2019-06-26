@@ -33,10 +33,10 @@ var testInvalidURLSet = map[string]int{
 	"/index.html": http.StatusBadRequest,
 }
 
-var malwareURLs = map[string]bool{
-	"http://evilfoo.com":  true,
-	"http://malware.com":  true,
-	"http://foo.com/evil": true,
+var malwareURLs = []string{
+	"http://evilfoo.com",
+	"http://malware.com",
+	"http://foo.com/evil",
 }
 
 type Resp struct {
@@ -82,27 +82,40 @@ func TestParseURLInvalid(t *testing.T) {
 	}
 }
 
+func testHandlerQuery(name string, handler http.HandlerFunc, url string, expected bool, t *testing.T) {
+	t.Run(name, func(t *testing.T) {
+		reqURL := URLPrefix + url
+
+		req, _ := http.NewRequest("GET", reqURL, nil)
+		req.RequestURI = reqURL
+		res := httptest.NewRecorder()
+
+		handler(res, req)
+
+		if res.Code != http.StatusOK {
+			t.Error()
+		}
+
+		jResp := Resp{}
+		err := json.Unmarshal(res.Body.Bytes(), &jResp)
+		if err != nil {
+			t.Errorf("Could not unmarshal response")
+		}
+
+		if jResp.Malware != expected {
+			t.Error()
+		}
+	})
+}
+
 func TestHandler(t *testing.T) {
-	reqURL := URLPrefix + "evilfoo.com"
-
-	req, _ := http.NewRequest("GET", reqURL, nil)
-	req.RequestURI = reqURL
-	res := httptest.NewRecorder()
-
-	urlDB := urlinfo.MapURLDB{DB: malwareURLs}
-	handler(&urlDB)(res, req)
-
-	if res.Code != http.StatusOK {
-		t.Error()
+	urlDB := urlinfo.NewStringMapURLDB()
+	for _, url := range malwareURLs {
+		urlDB.Add(url)
 	}
 
-	jResp := Resp{}
-	err := json.Unmarshal(res.Body.Bytes(), &jResp)
-	if err != nil {
-		t.Error()
-	}
+	handlerFunc := handler(&urlDB)
 
-	if jResp.Malware != true {
-		t.Fatal()
-	}
+	testHandlerQuery("existing", handlerFunc, "evilfoo.com", true, t)
+	testHandlerQuery("non-existing", handlerFunc, "miss", false, t)
 }
