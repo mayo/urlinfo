@@ -11,6 +11,7 @@ import (
 type URLDB interface {
 	Lookup(url string) bool
 	Load(filename string) error
+	Add(url string)
 }
 
 // MapURLDB is a map based URL database, storing the URL (key) as string.
@@ -28,7 +29,13 @@ func NewMapURLDB() MapURLDB {
 
 // Lookup given URL in data store and return true if the URL is present
 func (mdb MapURLDB) Lookup(url string) bool {
-	return mdb.DB[url]
+	_, ok := mdb.DB[url]
+	return ok
+}
+
+// Add a new entry to the DB
+func (mdb MapURLDB) Add(url string) {
+	mdb.DB[url] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://
@@ -41,7 +48,7 @@ func (mdb MapURLDB) Load(filename string) error {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
-		mdb.DB[url] = true
+		mdb.Add(url)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -51,25 +58,28 @@ func (mdb MapURLDB) Load(filename string) error {
 	return nil
 }
 
+// ByteSum is a 16 byte array
 type ByteSum [16]byte
+
+// ByteSumBoolMap is maps ByteSum to boolean
 type ByteSumBoolMap map[ByteSum]bool
 
-// ByteMapURLDB is a map based URL database, storing the URL as FNV-128a hash
+// ByteMapURLDB is a map based URL database, storing a hashed URL
 type ByteMapURLDB struct {
-	DB ByteSumBoolMap
+	db ByteSumBoolMap
 }
 
-// NewButeMapURLDB initiqlized a new ByteMapURLDB with an empty map
+// NewByteMapURLDB initiqlized a new ByteMapURLDB with an empty map
 func NewByteMapURLDB() ByteMapURLDB {
 	hmdb := ByteMapURLDB{}
-	hmdb.DB = make(ByteSumBoolMap)
+	hmdb.db = make(ByteSumBoolMap)
 
 	return hmdb
 }
 
 // Hash the given string (URL)
 func (hmdb ByteMapURLDB) Hash(data string) (out ByteSum) {
-	h := fnv.New128a()
+	h := fnv.New64a()
 	h.Write([]byte(data))
 	copy(out[:], h.Sum(nil))
 	return
@@ -77,7 +87,13 @@ func (hmdb ByteMapURLDB) Hash(data string) (out ByteSum) {
 
 // Lookup given URL in data store and return true if the URL is present
 func (hmdb ByteMapURLDB) Lookup(url string) bool {
-	return hmdb.DB[hmdb.Hash(url)]
+	_, ok := hmdb.db[hmdb.Hash(url)]
+	return ok
+}
+
+// Add a new entry to the DB
+func (hmdb ByteMapURLDB) Add(url string) {
+	hmdb.db[hmdb.Hash(url)] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://.
@@ -90,8 +106,7 @@ func (hmdb ByteMapURLDB) Load(filename string) (err error) {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
-		// Store the hashed URL
-		hmdb.DB[hmdb.Hash(url)] = true
+		hmdb.Add(url)
 	}
 
 	if err := scanner.Err(); err != nil {
