@@ -45,10 +45,6 @@ type Resp struct {
 
 func TestParseURLValid(t *testing.T) {
 	for _, test := range testValidURLSet {
-		// u, err := url.Parse(URLPrefix + test.input)
-		// if err != nil {
-		// 	t.Fatalf("Could not parse test input URL")
-		// }
 		u := URLPrefix + test.input
 
 		parsed, err := parseCleanURL(u)
@@ -65,10 +61,6 @@ func TestParseURLValid(t *testing.T) {
 
 func TestParseURLInvalid(t *testing.T) {
 	for reqURL := range testInvalidURLSet {
-		// u, err := url.Parse(URLPrefix + reqURL)
-		// if err != nil {
-		// 	t.Fatalf("Could not parse test input URL")
-		// }
 		u := URLPrefix + reqURL
 
 		parsed, err := parseCleanURL(u)
@@ -82,14 +74,25 @@ func TestParseURLInvalid(t *testing.T) {
 	}
 }
 
+func makeRequest(url string, t *testing.T) (res *httptest.ResponseRecorder, req *http.Request) {
+	var err error
+	reqURL := URLPrefix + url
+
+	req, err = http.NewRequest("GET", reqURL, nil)
+
+	if err != nil {
+		t.Fatalf("Could not create request")
+	}
+
+	req.RequestURI = reqURL
+	res = httptest.NewRecorder()
+
+	return
+}
+
 func testHandlerQuery(name string, handler http.HandlerFunc, url string, expected bool, t *testing.T) {
 	t.Run(name, func(t *testing.T) {
-		reqURL := URLPrefix + url
-
-		req, _ := http.NewRequest("GET", reqURL, nil)
-		req.RequestURI = reqURL
-		res := httptest.NewRecorder()
-
+		res, req := makeRequest(url, t)
 		handler(res, req)
 
 		if res.Code != http.StatusOK {
