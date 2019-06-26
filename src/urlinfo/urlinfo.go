@@ -2,7 +2,6 @@ package urlinfo
 
 import (
 	"bufio"
-	"errors"
 	"hash/fnv"
 	"os"
 	"strings"
@@ -36,7 +35,7 @@ func (mdb MapURLDB) Lookup(url string) bool {
 func (mdb MapURLDB) Load(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		return errors.New("urlinfo: Error loading data set: " + err.Error())
+		return err
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -46,7 +45,7 @@ func (mdb MapURLDB) Load(filename string) error {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return errors.New("urlinfo: Error loading data set: " + err.Error())
+		return err
 	}
 
 	return nil
@@ -85,7 +84,7 @@ func (hmdb ByteMapURLDB) Lookup(url string) bool {
 func (hmdb ByteMapURLDB) Load(filename string) (err error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return errors.New("Could not load test data")
+		return err
 	}
 
 	scanner := bufio.NewScanner(f)

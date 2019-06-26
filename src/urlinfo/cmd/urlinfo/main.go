@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -74,12 +75,24 @@ func httpError(w http.ResponseWriter, message string, status int) {
 }
 
 func main() {
+	var datafile string
+
+	//Handle command line arguments
+	flag.StringVar(&datafile, "datafile", "", "Data file to load")
+	flag.Parse()
+
+	// If datafile wasn't specified, bail out
+	if datafile == "" {
+		fmt.Println("No data file specified.")
+		os.Exit(1)
+	}
+
 	// Initialize a new URL database
 	urlDB := urlinfo.NewByteMapURLDB()
 
 	// Load data
 	fmt.Println("urlinfo: Loading malware URLs...")
-	err := urlDB.Load("../../testdata/malware_large.txt")
+	err := urlDB.Load(datafile)
 	if err != nil {
 		fmt.Println("urlinfo: Could not load URLs:", err)
 		os.Exit(1)
