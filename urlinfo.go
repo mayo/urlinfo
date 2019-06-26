@@ -20,26 +20,26 @@ type StringMapURLDB struct {
 }
 
 // NewStringMapURLDB creates a new instance of MapURLDB with an empty map
-func NewStringMapURLDB() StringMapURLDB {
+func NewStringMapURLDB() *StringMapURLDB {
 	mdb := StringMapURLDB{}
 	mdb.db = make(map[string]bool)
 
-	return mdb
+	return &mdb
 }
 
 // Lookup given URL in data store and return true if the URL is present
-func (mdb StringMapURLDB) Lookup(url string) bool {
+func (mdb *StringMapURLDB) Lookup(url string) bool {
 	_, ok := mdb.db[url]
 	return ok
 }
 
 // Add a new entry to the DB
-func (mdb StringMapURLDB) Add(url string) {
+func (mdb *StringMapURLDB) Add(url string) {
 	mdb.db[url] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://
-func (mdb StringMapURLDB) Load(filename string) error {
+func (mdb *StringMapURLDB) Load(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -70,15 +70,15 @@ type ByteMapURLDB struct {
 }
 
 // NewByteMapURLDB initiqlized a new ByteMapURLDB with an empty map
-func NewByteMapURLDB() ByteMapURLDB {
+func NewByteMapURLDB() *ByteMapURLDB {
 	hmdb := ByteMapURLDB{}
 	hmdb.db = make(ByteSumBoolMap)
 
-	return hmdb
+	return &hmdb
 }
 
 // Hash the given string (URL)
-func (hmdb ByteMapURLDB) Hash(data string) (out ByteSum) {
+func (hmdb *ByteMapURLDB) Hash(data string) (out ByteSum) {
 	h := fnv.New64a()
 	h.Write([]byte(data))
 	copy(out[:], h.Sum(nil))
@@ -86,18 +86,18 @@ func (hmdb ByteMapURLDB) Hash(data string) (out ByteSum) {
 }
 
 // Lookup given URL in data store and return true if the URL is present
-func (hmdb ByteMapURLDB) Lookup(url string) bool {
+func (hmdb *ByteMapURLDB) Lookup(url string) bool {
 	_, ok := hmdb.db[hmdb.Hash(url)]
 	return ok
 }
 
 // Add a new entry to the DB
-func (hmdb ByteMapURLDB) Add(url string) {
+func (hmdb *ByteMapURLDB) Add(url string) {
 	hmdb.db[hmdb.Hash(url)] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://.
-func (hmdb ByteMapURLDB) Load(filename string) (err error) {
+func (hmdb *ByteMapURLDB) Load(filename string) (err error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

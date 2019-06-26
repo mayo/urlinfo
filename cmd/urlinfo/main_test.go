@@ -118,7 +118,7 @@ func TestHandlerValid(t *testing.T) {
 		urlDB.Add(url)
 	}
 
-	handlerFunc := handler(&urlDB)
+	handlerFunc := handler(urlDB)
 
 	testHandlerQuery("existing", handlerFunc, "evilfoo.com", true, t)
 	testHandlerQuery("non-existing", handlerFunc, "miss", false, t)
@@ -133,7 +133,7 @@ func TestHandlerInvalid(t *testing.T) {
 	for reqURL, retCode := range testInvalidURLSet {
 		t.Run(fmt.Sprint("url:", reqURL), func(t *testing.T) {
 			res, req := makeRequest(reqURL, t)
-			handler(&urlDB)(res, req)
+			handler(urlDB)(res, req)
 
 			if res.Code != retCode {
 				t.Error()
