@@ -32,7 +32,7 @@ var testInvalidURLSet = map[string]int{
 	"/index.html": http.StatusBadRequest,
 }
 
-var badURLs = map[string]bool{
+var malwareURLs = map[string]bool{
 	"http://evilfoo.com":  true,
 	"http://malware.com":  true,
 	"http://foo.com/evil": true,
@@ -88,7 +88,7 @@ func TestHandler(t *testing.T) {
 	req.RequestURI = reqURL
 	res := httptest.NewRecorder()
 
-	urlDB := urlinfo.MapURLDB{DB: badURLs}
+	urlDB := urlinfo.MapURLDB{DB: malwareURLs}
 	handler(&urlDB)(res, req)
 
 	if res.Code != http.StatusOK {

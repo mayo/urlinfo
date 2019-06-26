@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"urlinfo"
 
 	"github.com/PuerkitoBio/purell"
@@ -15,7 +16,7 @@ const (
 	urlPrefixLen = len(URLPrefix)
 )
 
-// parseCleanURL parses the request URI, parsing out the link that needs to be checked, and doing a light validation and normalization on it
+// parseCleanURL parses the request URI, parsing out the link that needs to be checked, and doing a light validation and normalization on it. http:// is assumed for normalization, as the incoming links have no protocol specified. Alternatively, this could be stripped off at the end.
 func parseCleanURL(requestURI string) (cleanURL string, err error) {
 	requestURI = requestURI[urlPrefixLen:]
 
@@ -37,6 +38,7 @@ func parseCleanURL(requestURI string) (cleanURL string, err error) {
 	return
 }
 
+// handler handles the incoming requests, stripping off the service and version prefix.
 func handler(udb urlinfo.URLDB) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the requested URL and normalize it
@@ -52,15 +54,18 @@ func handler(udb urlinfo.URLDB) http.HandlerFunc {
 		ok := udb.Lookup(lookupURL)
 
 		// Respond
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("{\"malware\": %t}", ok)))
 	})
 }
 
+// badRequestError is a helper for returning HTTP errors. Idea borrowed from Go's http package.
 func badRequestError(w http.ResponseWriter) {
 	httpError(w, "400: Bad Request", http.StatusBadRequest)
 }
 
+// httpError handles generic http errors. Idea borrowed from Go's http package.
 func httpError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -68,12 +73,20 @@ func httpError(w http.ResponseWriter, message string, status int) {
 	w.Write([]byte(message))
 }
 
-var urlDB urlinfo.URLDB
-
 func main() {
-	urls := map[string]bool{"malware.com": true}
-	urlDB = urlinfo.MapURLDB{DB: urls}
+	// Initialize a new URL database
+	urlDB := urlinfo.NewByteMapURLDB()
 
+	// Load data
+	fmt.Println("urlinfo: Loading malware URLs...")
+	err := urlDB.Load("../../testdata/malware_large.txt")
+	if err != nil {
+		fmt.Println("urlinfo: Could not load URLs:", err)
+		os.Exit(1)
+	}
+
+	// Serve requests
+	fmt.Println("urlinfo: Starting server")
 	http.HandleFunc(URLPrefix, handler(urlDB))
 	http.ListenAndServe(":8080", nil)
 }
