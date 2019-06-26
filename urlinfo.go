@@ -14,32 +14,32 @@ type URLDB interface {
 	Add(url string)
 }
 
-// MapURLDB is a map based URL database, storing the URL (key) as string.
-type MapURLDB struct {
+// StringMapURLDB is a map based URL database, storing the URL (key) as string.
+type StringMapURLDB struct {
 	DB map[string]bool
 }
 
-// NewMapURLDB creates a new instance of MapURLDB with an empty map
-func NewMapURLDB() MapURLDB {
-	mdb := MapURLDB{}
+// NewStringMapURLDB creates a new instance of MapURLDB with an empty map
+func NewStringMapURLDB() StringMapURLDB {
+	mdb := StringMapURLDB{}
 	mdb.DB = make(map[string]bool)
 
 	return mdb
 }
 
 // Lookup given URL in data store and return true if the URL is present
-func (mdb MapURLDB) Lookup(url string) bool {
+func (mdb StringMapURLDB) Lookup(url string) bool {
 	_, ok := mdb.DB[url]
 	return ok
 }
 
 // Add a new entry to the DB
-func (mdb MapURLDB) Add(url string) {
+func (mdb StringMapURLDB) Add(url string) {
 	mdb.DB[url] = true
 }
 
 // Load data into the internal map. The file is expected to have a normalized url per line, starting with http://
-func (mdb MapURLDB) Load(filename string) error {
+func (mdb StringMapURLDB) Load(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

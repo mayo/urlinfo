@@ -19,16 +19,16 @@ var malwareURLs = map[string]bool{
 	"foo.com/evil": true,
 }
 
-func TestLookupMiss(t *testing.T) {
-	urlDB := urlinfo.MapURLDB{DB: malwareURLs}
+func TestStringMapLookupMiss(t *testing.T) {
+	urlDB := urlinfo.StringMapURLDB{DB: malwareURLs}
 
 	if ok := urlDB.Lookup("foo.com"); ok {
 		t.Fatal()
 	}
 }
 
-func TestLookupHit(t *testing.T) {
-	urlDB := urlinfo.MapURLDB{DB: malwareURLs}
+func TestStringMapLookupHit(t *testing.T) {
+	urlDB := urlinfo.StringMapURLDB{DB: malwareURLs}
 
 	if ok := urlDB.Lookup("malware.com"); !ok {
 		t.Fatal()
@@ -70,7 +70,7 @@ func BenchmarkByteMap(b *testing.B) {
 }
 
 func BenchmarkMap(b *testing.B) {
-	urlDB := urlinfo.NewMapURLDB()
+	urlDB := urlinfo.NewStringMapURLDB()
 	keys := make([]string, 0, benchDBSize)
 
 	for i := 0; i < benchDBSize; i++ {
