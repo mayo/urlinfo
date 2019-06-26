@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"urlinfo"
+
+	"github.com/mayo/urlinfo"
 )
 
 var testValidURLSet = []struct {

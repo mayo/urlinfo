@@ -3,7 +3,8 @@ package urlinfo_test
 import (
 	"math/rand"
 	"testing"
-	"urlinfo"
+
+	"github.com/mayo/urlinfo"
 )
 
 const (

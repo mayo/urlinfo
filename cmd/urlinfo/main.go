@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"urlinfo"
 
 	"github.com/PuerkitoBio/purell"
+	"github.com/mayo/urlinfo"
 )
 
 const (
