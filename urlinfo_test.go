@@ -133,7 +133,7 @@ func BenchmarkByteMap(b *testing.B) {
 	benchmarkLookup(urlDB, keys, b)
 }
 
-func BenchmarkMap(b *testing.B) {
+func BenchmarkStringMap(b *testing.B) {
 	urlDB := urlinfo.NewStringMapURLDB()
 	keys := make([]string, 0, benchDBSize)
 
