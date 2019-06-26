@@ -49,7 +49,7 @@ func TestStringMapLookup(t *testing.T) {
 	testLookup(urlDB, malwareURLs[0], t)
 }
 
-func TestStringMapLoad(t *testing.T) {
+func TestStringMapLoadValid(t *testing.T) {
 	urlDB := urlinfo.NewStringMapURLDB()
 	err := urlDB.Load(malwareFile)
 
@@ -60,6 +60,15 @@ func TestStringMapLoad(t *testing.T) {
 	testLookup(urlDB, malwareFileHit, t)
 }
 
+func TestStringMapLoadInvalid(t *testing.T) {
+	urlDB := urlinfo.NewStringMapURLDB()
+	err := urlDB.Load("foo")
+
+	if err == nil {
+		t.Error()
+	}
+}
+
 // ByteMap tests
 
 func TestByteMapLookup(t *testing.T) {
@@ -68,7 +77,7 @@ func TestByteMapLookup(t *testing.T) {
 	testLookup(urlDB, malwareURLs[0], t)
 }
 
-func TestByteMapLoad(t *testing.T) {
+func TestByteMapLoadValid(t *testing.T) {
 	urlDB := urlinfo.NewByteMapURLDB()
 	err := urlDB.Load(malwareFile)
 
@@ -77,6 +86,15 @@ func TestByteMapLoad(t *testing.T) {
 	}
 
 	testLookup(urlDB, malwareFileHit, t)
+}
+
+func TestByteMapLoadInvalid(t *testing.T) {
+	urlDB := urlinfo.NewByteMapURLDB()
+	err := urlDB.Load("foo")
+
+	if err == nil {
+		t.Error()
+	}
 }
 
 // Benchmarks
