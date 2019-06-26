@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -111,7 +112,7 @@ func testHandlerQuery(name string, handler http.HandlerFunc, url string, expecte
 	})
 }
 
-func TestHandler(t *testing.T) {
+func TestHandlerValid(t *testing.T) {
 	urlDB := urlinfo.NewStringMapURLDB()
 	for _, url := range malwareURLs {
 		urlDB.Add(url)
@@ -121,4 +122,22 @@ func TestHandler(t *testing.T) {
 
 	testHandlerQuery("existing", handlerFunc, "evilfoo.com", true, t)
 	testHandlerQuery("non-existing", handlerFunc, "miss", false, t)
+}
+
+func TestHandlerInvalid(t *testing.T) {
+	urlDB := urlinfo.NewStringMapURLDB()
+	for _, url := range malwareURLs {
+		urlDB.Add(url)
+	}
+
+	for reqURL, retCode := range testInvalidURLSet {
+		t.Run(fmt.Sprint("url:", reqURL), func(t *testing.T) {
+			res, req := makeRequest(reqURL, t)
+			handler(&urlDB)(res, req)
+
+			if res.Code != retCode {
+				t.Error()
+			}
+		})
+	}
 }
