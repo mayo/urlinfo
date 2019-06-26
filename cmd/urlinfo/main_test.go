@@ -41,7 +41,7 @@ var malwareURLs = []string{
 }
 
 type Resp struct {
-	Malware bool `json:"malware"`
+	Match bool `json:"match"`
 }
 
 func TestParseURLValid(t *testing.T) {
@@ -106,7 +106,7 @@ func testHandlerQuery(name string, handler http.HandlerFunc, url string, expecte
 			t.Errorf("Could not unmarshal response")
 		}
 
-		if jResp.Malware != expected {
+		if jResp.Match != expected {
 			t.Error()
 		}
 	})

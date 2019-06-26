@@ -57,7 +57,7 @@ func handler(udb urlinfo.URLDB) http.HandlerFunc {
 		// Respond
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("{\"malware\": %t}", ok)))
+		w.Write([]byte(fmt.Sprintf("{\"match\": %t}", ok)))
 	})
 }
 
